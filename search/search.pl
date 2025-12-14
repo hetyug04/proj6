@@ -9,11 +9,11 @@ search(Actions) :-
 
 bfs([state(Room, _Keys, Path)|_], _, Actions) :-
     treasure(Room),
-    reverse(Path, Actions).
+    reverse(Path, Rooms),
+    rooms_to_moves(Rooms, Actions).
 
 bfs([state(Room, Keys, _)|RestQueue], Visited, Actions) :-
-    State = st(Room, Keys),
-    member(State, Visited), !, 
+    member(st(Room, Keys), Visited), !,
     bfs(RestQueue, Visited, Actions).
 
 bfs([state(Room, Keys, Path)|RestQueue], Visited, Actions) :-
@@ -37,9 +37,11 @@ can_pass(Here, There, Keys) :-
     (locked_door(Here, There, Color); locked_door(There, Here, Color)),
     member(Color, Keys).
 
-get_keys(Room, CurrentKeys, NewKeys) :-
-    (key(Room, Color) ->
-        sort([Color|CurrentKeys], NewKeys)
-    ;
-        NewKeys = CurrentKeys
-    ).
+get_keys(Room, Keys0, Keys) :-
+    findall(Color, key(Room, Color), Colors),
+    append(Colors, Keys0, Keys1),
+    sort(Keys1, Keys).
+
+rooms_to_moves([_], []).
+rooms_to_moves([A,B|Rest], [move(A,B)|Moves]) :-
+    rooms_to_moves([B|Rest], Moves).
